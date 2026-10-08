@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import type { InventoryResponse, ProductsResponse } from '@/lib/api-types'
+import type { InventoryResponse, MovementsResponse, ProductsResponse } from '@/lib/api-types'
+import { computeFlow } from '@/lib/warehouse/flow'
 import { computeLayout } from '@/lib/warehouse/layout'
 
 export const LOCATION_ID = 'loc-1'
@@ -14,21 +15,22 @@ async function getJson<T>(url: string): Promise<T> {
   return body as T
 }
 
-/** Loads products and stock on mount and on a timer, and turns them into a rack layout. */
+/** Loads products, stock and movements on mount and on a timer, and turns them into a rack layout and a flow layout. */
 export function useWarehouseData() {
-  const [data, setData] = useState<{ products: ProductsResponse; inventory: InventoryResponse } | null>(null)
+  const [data, setData] = useState<{ products: ProductsResponse; inventory: InventoryResponse; movements: MovementsResponse } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
-        const [products, inventory] = await Promise.all([
+        const [products, inventory, movements] = await Promise.all([
           getJson<ProductsResponse>('/api/products'),
           getJson<InventoryResponse>(`/api/inventory?locationId=${LOCATION_ID}`),
+          getJson<MovementsResponse>(`/api/movements?locationId=${LOCATION_ID}`),
         ])
         if (cancelled) return
-        setData({ products, inventory })
+        setData({ products, inventory, movements })
         setError(null)
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load warehouse data')
@@ -46,5 +48,9 @@ export function useWarehouseData() {
     () => (data ? computeLayout(data.products.products, data.inventory.levels) : null),
     [data],
   )
-  return { layout, computedAt: data?.inventory.computedAt ?? null, error }
+  const flow = useMemo(
+    () => (data && layout ? computeFlow(data.movements.movements, layout.floorDepth) : null),
+    [data, layout],
+  )
+  return { layout, flow, computedAt: data?.inventory.computedAt ?? null, error }
 }

@@ -1,10 +1,9 @@
 'use client'
 
-import { Text } from '@react-three/drei'
-import { FLOOR, ZONES } from '@/lib/warehouse/layout'
+import { dockZs, FLOOR, ZONES } from '@/lib/warehouse/layout'
 import { COLORS, WALL_OPACITY } from '@/lib/theme'
+import { FloorLabel } from './FloorLabel'
 
-const FONT = '/fonts/jetbrains-mono-500.woff'
 const HALF_LENGTH = FLOOR.length / 2
 
 /** A flat strip on the floor. */
@@ -26,27 +25,9 @@ function Wall({ position, size }: { position: [number, number, number]; size: [n
   )
 }
 
-function FloorLabel({ x, z, children }: { x: number; z: number; children: string }) {
-  return (
-    <Text
-      font={FONT}
-      position={[x, 0.01, z]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      fontSize={0.35}
-      letterSpacing={0.25}
-      color={COLORS.label}
-      anchorX="center"
-      anchorY="middle"
-    >
-      {children}
-    </Text>
-  )
-}
-
 /** Floor, walls, zone lines, docks, lanes and floor labels. */
 export function Warehouse({ depth }: { depth: number }) {
   const halfDepth = depth / 2
-  const dockZs = Array.from({ length: ZONES.dockCount }, (_, i) => -halfDepth + (depth * (i + 0.5)) / ZONES.dockCount)
   const dockInset = ZONES.dockWidth / 2
   const wallY = FLOOR.wallHeight / 2
   const wallZ = -halfDepth + FLOOR.wallThickness / 2
@@ -71,7 +52,7 @@ export function Warehouse({ depth }: { depth: number }) {
       <Line x={ZONES.receivingLineX} z={0} length={depth} along="z" color={COLORS.inbound} />
       <Line x={ZONES.packLineX} z={0} length={depth} along="z" color={COLORS.outbound} />
 
-      {dockZs.map((z) => {
+      {dockZs(depth).map((z) => {
         const blueX = -HALF_LENGTH + dockInset
         const redX = HALF_LENGTH - dockInset
         return (
