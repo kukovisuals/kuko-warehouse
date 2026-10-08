@@ -2,24 +2,25 @@
 
 import { OrthographicCamera } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
-import { cameraPosition, fitZoom } from '@/lib/warehouse/camera'
+import { fitCamera } from '@/lib/warehouse/camera'
 import type { Flow as FlowData } from '@/lib/warehouse/flow'
 import type { WarehouseLayout } from '@/lib/warehouse/layout'
 import { Flow } from './Flow'
 import { Racks } from './Racks'
 import { Warehouse } from './Warehouse'
 
-/** Fixed orthographic camera aimed at the floor center, zoomed to fit the floor. */
+/** Fixed orthographic camera, zoomed so the floor and the truck aprons fill the card. */
 function FitCamera({ depth }: { depth: number }) {
   const size = useThree((s) => s.size)
+  const { position, target, zoom } = fitCamera(size.width, size.height, depth)
   return (
     <OrthographicCamera
       makeDefault
-      position={cameraPosition()}
-      zoom={fitZoom(size.width, size.height, depth)}
+      position={position}
+      zoom={zoom}
       near={0.1}
       far={300}
-      onUpdate={(c) => c.lookAt(0, 0, 0)}
+      onUpdate={(c) => c.lookAt(...target)}
     />
   )
 }

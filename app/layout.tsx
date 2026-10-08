@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kuko Warehouse",
+  title: "Death Wish Coffee · Product slotting",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

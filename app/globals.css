@@ -15,21 +15,43 @@ body {
 }
 
 .page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   height: 100%;
   padding: 16px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: #1b1e25;
+}
+
+.page-header p {
+  margin: 4px 0 0;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6b7686;
 }
 
 .warehouse {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 16px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
   .warehouse {
     grid-template-columns: 1fr;
-    height: auto;
+    flex: none;
   }
 
   .warehouse-card {
