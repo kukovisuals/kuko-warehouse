@@ -26,6 +26,11 @@ export const ZONES = {
   lineLift: 0.005,
 } as const
 
+/** z of each dock, spread evenly along the floor depth. Inbound and outbound docks share these. */
+export function dockZs(floorDepth: number): number[] {
+  return Array.from({ length: ZONES.dockCount }, (_, i) => -floorDepth / 2 + (floorDepth * (i + 0.5)) / ZONES.dockCount)
+}
+
 export const RACK = {
   startX: -12,
   baysPerRow: 10,

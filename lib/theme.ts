@@ -12,3 +12,12 @@ export const COLORS = {
 } as const
 
 export const WALL_OPACITY = 0.7
+
+// Flow tokens: not in the spec's color table yet.
+export const FLOW_COLORS = {
+  truckBody: '#F6F8FC',
+  truckCab: '#FFFFFF',
+  truckGlass: '#2A2E37',
+  wheel: '#1B1E25',
+  packed: '#F08A83', // lighter outbound red: packed, not yet shipped
+} as const

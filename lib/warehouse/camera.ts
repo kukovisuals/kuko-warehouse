@@ -1,4 +1,5 @@
 // Fixed view: elevation and azimuth tuned to the mockup. No orbit in v1 (OPEN-D3).
+import { FLOW } from './flow'
 import { FLOOR } from './layout'
 
 export const ELEVATION = (42 * Math.PI) / 180
@@ -16,13 +17,14 @@ export function cameraPosition(): [number, number, number] {
   ]
 }
 
-/** Orthographic zoom (pixels per meter) so the floor, walls included, fits the view with a margin. */
+/** Orthographic zoom (pixels per meter) so the floor, walls and the truck apron on both sides fit the view with a margin. */
 export function fitZoom(width: number, height: number, floorDepth: number): number {
   const right = [Math.cos(AZIMUTH), 0, -Math.sin(AZIMUTH)]
   const up = [-Math.sin(ELEVATION) * Math.sin(AZIMUTH), Math.cos(ELEVATION), -Math.sin(ELEVATION) * Math.cos(AZIMUTH)]
   let halfW = 0
   let halfH = 0
-  for (const x of [-FLOOR.length / 2, FLOOR.length / 2])
+  const halfLength = FLOOR.length / 2 + FLOW.apron
+  for (const x of [-halfLength, halfLength])
     for (const y of [-FLOOR.thickness, FLOOR.wallHeight])
       for (const z of [-floorDepth / 2, floorDepth / 2]) {
         halfW = Math.max(halfW, Math.abs(x * right[0] + y * right[1] + z * right[2]))
