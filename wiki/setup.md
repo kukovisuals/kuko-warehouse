@@ -12,10 +12,13 @@ Get the warehouse app running on a new machine.
 ## Steps
 
 **1. Create the app**
+The repo root is the app (see [Architecture](03-architecture.md)). `create-next-app` refuses a folder that already has `wiki/` or `prisma/`, so scaffold in a temp folder and copy the files in:
 ```bash
-npx create-next-app@latest warehouse-app --ts --app --eslint
-cd warehouse-app
+npx create-next-app@latest /tmp/scaffold --ts --app --eslint --no-tailwind --no-src-dir --use-npm --disable-git
+cp -R /tmp/scaffold/{app,public,.gitignore,eslint.config.mjs,next.config.ts,package.json,tsconfig.json} .
+npm install
 ```
+Set `"name"` in `package.json` to `kuko-warehouse`.
 
 **2. Install the 3D layer**
 ```bash
@@ -26,8 +29,9 @@ npm i -D @types/three
 **3. Install state and test tools**
 ```bash
 npm i zustand
-npm i -D vitest @playwright/test
+npm i -D @types/node@^24 vitest @playwright/test tsx
 ```
+Vitest 5 needs `@types/node` 22 or newer; the Next.js template pins 20.
 
 **4. Start Postgres**
 ```bash
@@ -37,20 +41,33 @@ docker run -d --name warehouse-db -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres
 **5. Set up Prisma (v7)**
 ```bash
 npm i @prisma/client @prisma/adapter-pg pg dotenv
-npm i -D prisma @types/pg
-npx prisma init
+npm i -D prisma@^7.10.0 @types/pg
 ```
+Pin `prisma@^7`: plain `prisma` installs the 8.x release candidate, which does not match the 7.x client.
+
+Skip `npx prisma init` (the `prisma/` folder already exists). Add these by hand: `prisma/schema.prisma` ([Data Model](05-data-model.md); generator `prisma-client`, `output = "../generated/prisma"`, no `url` in the datasource) and `prisma.config.ts`:
+```ts
+import 'dotenv/config'
+import { defineConfig, env } from 'prisma/config'
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  migrations: { path: 'prisma/migrations', seed: 'tsx prisma/seed.ts' },
+  datasource: { url: env('DATABASE_URL') },
+})
+```
+Add `/generated/` to `.gitignore`.
+
 Set `DATABASE_URL` in `.env`:
 ```
 DATABASE_URL="postgresql://postgres:dev@localhost:5432/postgres"
 ```
-Check `prisma.config.ts` reads it: `datasource: { url: env('DATABASE_URL') }`.
 
-Create the client once in `app/api/_lib/db.ts`. Prisma 7 needs the `pg` adapter:
+Create the client once in `lib/db.ts` (the API and the seed both use it). Prisma 7 needs the `pg` adapter:
 ```ts
 import 'dotenv/config'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../../../generated/prisma/client' // match `output` in schema.prisma
+import { PrismaClient } from '../generated/prisma/client' // match `output` in schema.prisma
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 export const db = new PrismaClient({ adapter })

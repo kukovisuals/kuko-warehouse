@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Direction {
+  IN
+  OUT
+}
+
+enum MovementStatus {
+  IN_TRANSIT   // IN
+  RECEIVED     // IN
+  COMMITTED    // OUT
+  PACKED       // OUT
+  SHIPPED      // OUT
+}
+
+enum Source {
+  TRANSFER     // IN
+  THREE_PL     // IN
+  MANUAL       // IN
+  ORDER        // OUT
+}
+
+enum Detail {
+  FULL
+  RECEIVED_ONLY
+  INFERRED
+}
+
+model Location {
+  id        String           @id @default(cuid())
+  shopifyId String?          @unique
+  name      String                              // e.g. "NJ Warehouse"
+  levels    InventoryLevel[]
+  movements Movement[]
+}
+
+model Product {
+  id        String    @id @default(cuid())
+  shopifyId String?   @unique
+  title     String
+  category  String?                             // e.g. "Coffee"
+  variants  Variant[]
+}
+
+model Variant {
+  id        String           @id @default(cuid())
+  shopifyId String?          @unique
+  productId String
+  product   Product          @relation(fields: [productId], references: [id])
+  sku       String?                             // Shopify allows blank
+  options   Json                                // { "Grind": "Ground", "Size": "1 lb" }
+  levels    InventoryLevel[]
+  movements Movement[]
+}
+
+model InventoryLevel {                          // one row per variant per warehouse
+  variantId  String
+  variant    Variant  @relation(fields: [variantId], references: [id])
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+  onHand     Int
+  available  Int
+  committed  Int
+  incoming   Int
+
+  @@id([variantId, locationId])
+  @@index([locationId])
+}
+
+model Movement {
+  id         String         @id @default(cuid())
+  locationId String
+  location   Location       @relation(fields: [locationId], references: [id])
+  variantId  String
+  variant    Variant        @relation(fields: [variantId], references: [id])
+  direction  Direction
+  quantity   Int
+  status     MovementStatus
+  source     Source?                            // null when INFERRED
+  detail     Detail
+  ref        String?                            // source record id; null when INFERRED
+  carrier    String?                            // OUT only, e.g. "UPS"
+  createdAt  DateTime
+  shippedAt  DateTime?
+  doneAt     DateTime?                          // RECEIVED (IN) or SHIPPED (OUT); null while open
+  statusAt   DateTime                           // entered current status
+
+  @@unique([ref, variantId])                    // sync upserts on this
+  @@index([locationId, direction, doneAt])      // GET /api/movements
+}
+
+model SyncRun {
+  id         String   @id @default(cuid())
+  finishedAt DateTime                           // newest = API computedAt
+}
