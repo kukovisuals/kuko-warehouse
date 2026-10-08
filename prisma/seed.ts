@@ -3,7 +3,7 @@
 // Every number comes from seed.config.ts. See wiki/seed-data.md.
 
 import { db } from '../lib/db'
-import { balanceGap, movementState } from '../lib/status-engine'
+import { balanceGap, movementState, shippedRuleFromEnv } from '../lib/status-engine'
 import { seedConfig as cfg } from './seed.config'
 
 const HOUR = 3_600_000
@@ -195,6 +195,7 @@ function buildReceipts(now: Date): FakeReceipt[] {
 
 function buildMovements(orders: FakeOrder[], transfers: FakeTransfer[], receipts: FakeReceipt[], now: Date) {
   const locationId = cfg.location.id
+  const rule = shippedRuleFromEnv() // OPEN-01: OPEN01_OPTION=B switches to the PACKED rule
   const rows: Omit<MovementRow, 'id'>[] = []
 
   for (const t of transfers) {
@@ -221,7 +222,7 @@ function buildMovements(orders: FakeOrder[], transfers: FakeTransfer[], receipts
 
   for (const o of orders) {
     for (const line of o.lines) {
-      const state = movementState({ orderCreatedAt: o.createdAt, cancelled: o.cancelled, fulfillment: o.fulfillment })
+      const state = movementState({ orderCreatedAt: o.createdAt, cancelled: o.cancelled, fulfillment: o.fulfillment }, { rule })
       if (!state) continue
       rows.push({ locationId, variantId: line.variantId, direction: 'OUT', quantity: line.quantity, source: 'ORDER', ref: o.ref, carrier: o.fulfillment ? o.carrier : null, ...state })
     }
