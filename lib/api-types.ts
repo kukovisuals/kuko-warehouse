@@ -30,3 +30,27 @@ export interface InventoryResponse {
   computedAt: string | null
   levels: ApiInventoryLevel[]
 }
+
+export type MovementDirection = 'IN' | 'OUT'
+export type MovementStatus = 'IN_TRANSIT' | 'RECEIVED' | 'COMMITTED' | 'PACKED' | 'SHIPPED'
+
+export interface ApiMovement {
+  id: string
+  direction: MovementDirection
+  variantId: string
+  quantity: number
+  status: MovementStatus
+  source: 'TRANSFER' | 'THREE_PL' | 'MANUAL' | 'ORDER' | null
+  detail: 'FULL' | 'RECEIVED_ONLY' | 'INFERRED'
+  ref: string | null
+  createdAt: string
+  shippedAt: string | null
+  doneAt: string | null
+  statusAt: string
+  carrier: string | null
+}
+
+export interface MovementsResponse {
+  computedAt: string | null
+  movements: ApiMovement[]
+}

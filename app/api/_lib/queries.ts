@@ -35,3 +35,30 @@ export async function getInventoryLevels(locationId: string) {
     incoming: l.incoming,
   }))
 }
+
+/** Every open movement, plus finished ones with `doneAt` after `since`. Newest `createdAt` first. */
+export async function getMovements(locationId: string, direction: 'IN' | 'OUT' | null, since: Date) {
+  const rows = await db.movement.findMany({
+    where: {
+      locationId,
+      ...(direction ? { direction } : {}),
+      OR: [{ doneAt: null }, { doneAt: { gt: since } }],
+    },
+    orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+  })
+  return rows.map((m) => ({
+    id: m.id,
+    direction: m.direction,
+    variantId: m.variantId,
+    quantity: m.quantity,
+    status: m.status,
+    source: m.source,
+    detail: m.detail,
+    ref: m.ref,
+    createdAt: m.createdAt.toISOString(),
+    shippedAt: m.shippedAt?.toISOString() ?? null,
+    doneAt: m.doneAt?.toISOString() ?? null,
+    statusAt: m.statusAt.toISOString(),
+    carrier: m.carrier,
+  }))
+}
