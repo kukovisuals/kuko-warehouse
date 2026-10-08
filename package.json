@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "OPEN01_OPTION=B tsx prisma/seed.ts",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "test": "vitest run",
