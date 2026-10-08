@@ -43,7 +43,7 @@ const received = (over: Partial<ApiMovement>) =>
 
 const build = (movements: ApiMovement[]) => {
   const layout = computeLayout(products, levels)
-  return computeSummary({ products, levels, movements, layout, flow: computeFlow(movements, layout.floorDepth) })
+  return computeSummary({ products, levels, movements, layout, flow: computeFlow(movements, layout, null) })
 }
 
 describe('shortRef', () => {
@@ -123,7 +123,7 @@ describe('packed', () => {
   it('matches the pack-zone count drawn in the scene', () => {
     const movements = [mv({}), mv({}), mv({})]
     const layout = computeLayout(products, levels)
-    expect(build(movements).packed.total).toBe(computeFlow(movements, layout.floorDepth).packed.count)
+    expect(build(movements).packed.total).toBe(computeFlow(movements, layout, null).packed.count)
   })
 })
 

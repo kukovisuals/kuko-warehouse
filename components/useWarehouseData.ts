@@ -7,7 +7,8 @@ import { computeSummary } from '@/lib/warehouse/summary'
 import { computeLayout } from '@/lib/warehouse/layout'
 
 export const LOCATION_ID = 'loc-1'
-const REFRESH_MS = 5 * 60 * 1000 // wiki/architecture.md: default refresh is 5 minutes
+// wiki/architecture.md: default refresh is 5 minutes. NEXT_PUBLIC_REFRESH_MS shortens it for demos (e.g. 5000).
+const REFRESH_MS = Number(process.env.NEXT_PUBLIC_REFRESH_MS) || 5 * 60 * 1000
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url)
@@ -50,7 +51,7 @@ export function useWarehouseData() {
     [data],
   )
   const flow = useMemo(
-    () => (data && layout ? computeFlow(data.movements.movements, layout.floorDepth) : null),
+    () => (data && layout ? computeFlow(data.movements.movements, layout, data.inventory.computedAt) : null),
     [data, layout],
   )
   const summary = useMemo(

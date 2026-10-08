@@ -6,10 +6,10 @@ import type { Summary, SummarySection } from '@/lib/warehouse/summary'
 
 type Tone = 'inbound' | 'neutral' | 'outbound'
 
-const TONE_COLOR: Record<Tone, string> = {
-  inbound: COLORS.inbound,
-  neutral: '#1B1E25',
-  outbound: COLORS.outbound,
+const TONE_COLOR: Record<Tone, { dot: string; text: string }> = {
+  inbound: { dot: COLORS.inbound, text: COLORS.inbound },
+  neutral: { dot: '#1B1E25', text: '#1B1E25' },
+  outbound: { dot: COLORS.outbound, text: COLORS.outboundText },
 }
 
 const fmt = (n: number) => n.toLocaleString('en-US')
@@ -36,10 +36,10 @@ function Section({
       <header className="summary-head">
         <div>
           <p className="summary-label">
-            <span className="summary-dot" style={{ background: color }} aria-hidden />
+            <span className="summary-dot" style={{ background: color.dot }} aria-hidden />
             {label}
           </p>
-          <p className="summary-total" style={{ color }}>
+          <p className="summary-total" style={{ color: color.text }}>
             {fmt(section.total)}
           </p>
           <p className="summary-detail">{section.detail}</p>
