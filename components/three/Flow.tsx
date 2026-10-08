@@ -1,27 +1,32 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { buildLoop, loopSource, staticScene } from '@/lib/warehouse/choreography'
 import type { Flow as FlowData } from '@/lib/warehouse/flow'
+import { AnimatedInstances } from './AnimatedInstances'
 import { FloorLabel } from './FloorLabel'
-import { Instanced } from './Instanced'
-import { Truck } from './Truck'
+import { prefersReducedMotion } from './reducedMotion'
+import { Trucks } from './Trucks'
 
-/** Trucks at the docks, pallets on the receiving lanes, packed parcels, and the shipped stacks with their counts. */
+/**
+ * Trucks at the docks, pallets, packed parcels and the shipped stacks, with their counts.
+ * By default a looping day plays: deliveries unload, parcels get packed and shipped, the trucks leave and the day restarts.
+ * With reduced motion it shows the data as it is, with no loop.
+ */
 export function Flow({ flow }: { flow: FlowData }) {
-  const shipped = useMemo(() => flow.stacks.flatMap((s) => s.parcels), [flow.stacks])
+  const [still] = useState(prefersReducedMotion)
+  const source = useMemo(() => {
+    if (still) {
+      const scene = staticScene(flow)
+      return { items: () => scene.items, trucks: () => scene.trucks }
+    }
+    return loopSource(buildLoop(flow))
+  }, [flow, still])
 
   return (
     <group>
-      {flow.inboundTrucks.map((t) => (
-        <Truck key={t.label} side="inbound" z={t.z} />
-      ))}
-      {flow.outboundTrucks.map((t) => (
-        <Truck key={t.label} side="outbound" z={t.z} />
-      ))}
-
-      <Instanced boxes={flow.pallets} />
-      <Instanced boxes={flow.packed.parcels} />
-      <Instanced boxes={shipped} />
+      <Trucks getSpecs={source.trucks} />
+      <AnimatedInstances getItems={source.items} />
 
       <FloorLabel x={flow.packed.label.x} z={flow.packed.label.z} size={0.3}>
         {flow.packed.label.text}
