@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { InventoryResponse, MovementsResponse, ProductsResponse } from '@/lib/api-types'
 import { computeFlow } from '@/lib/warehouse/flow'
+import { computeSummary } from '@/lib/warehouse/summary'
 import { computeLayout } from '@/lib/warehouse/layout'
 
 export const LOCATION_ID = 'loc-1'
@@ -52,5 +53,18 @@ export function useWarehouseData() {
     () => (data && layout ? computeFlow(data.movements.movements, layout.floorDepth) : null),
     [data, layout],
   )
-  return { layout, flow, computedAt: data?.inventory.computedAt ?? null, error }
+  const summary = useMemo(
+    () =>
+      data && layout && flow
+        ? computeSummary({
+            products: data.products.products,
+            levels: data.inventory.levels,
+            movements: data.movements.movements,
+            layout,
+            flow,
+          })
+        : null,
+    [data, layout, flow],
+  )
+  return { layout, flow, summary, computedAt: data?.inventory.computedAt ?? null, error }
 }
